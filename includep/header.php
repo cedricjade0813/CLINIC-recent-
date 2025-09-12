@@ -451,12 +451,12 @@ if (!empty($userName)) {
                     <div class="hidden md:block">
                         <?php if (isset($patient) && $patient): ?>
                             <p class="text-sm font-medium text-gray-800">
-                                <?php echo htmlspecialchars($patient['name']); ?>
+                                Hello, <?php echo htmlspecialchars($patient['name']); ?>
                             </p>
                             <p class="text-xs text-gray-400">ID: <?php echo htmlspecialchars($patient['student_id']); ?>
                             </p>
                         <?php else: ?>
-                            <p class="text-sm font-medium text-gray-800"><?php echo htmlspecialchars($userName); ?></p>
+                            <p class="text-sm font-medium text-gray-800">Hello, <?php echo htmlspecialchars($userName); ?></p>
                             <p class="text-xs text-gray-500"><?php echo htmlspecialchars($userRole); ?></p>
                         <?php endif; ?>
                     </div>
@@ -527,15 +527,7 @@ if (!empty($userName)) {
                         </li>
                     </ul>
                 </nav>
-                <div class="p-4 border-t border-gray-200 hidden md:block">
-                    <a href="../index.php"
-                        class="flex items-center text-sm font-medium text-gray-600 hover:text-primary">
-                        <div class="w-8 h-8 flex items-center justify-center mr-3">
-                            <i class="ri-graduation-cap-line ri-lg"></i>
-                        </div>
-                        <span>Hello Student</span>
-                    </a>
-                </div>
+                
 
 
             </aside>

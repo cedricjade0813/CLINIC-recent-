@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST['username'], $_POST['password'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $login_type = isset($_POST['login_type']) ? $_POST['login_type'] : 'main';
     $username_val = htmlspecialchars($username);
     $password_val = htmlspecialchars($password);
     try {
@@ -17,8 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->execute([$username]);
       $user = $stmt->fetch(PDO::FETCH_ASSOC);
       if ($user) {
-        $role = strtolower($user['role']);
-        // Check if user is active
+        // Check if this is a restricted login type (student/faculty modal)
+        if ($login_type === 'student') {
+          $login_error = 'This login is for students only. Please use the main login for admin/doctor/nurse accounts.';
+        } elseif ($login_type === 'faculty') {
+          $login_error = 'This login is for faculty only. Please use the main login for admin/doctor/nurse accounts.';
+        } else {
+          // Main login - proceed normally
+          $role = strtolower($user['role']);
+          // Check if user is active
         if ($user['status'] !== 'Active') {
           $login_error = 'Account is inactive. Please contact administrator.';
         } elseif (password_verify($password, $user['password'])) {
@@ -53,15 +61,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $login_error = 'Access denied: Only admin, doctor, or nurse can log in here.';
           }
         } else {
-          $login_error = 'incorrect_password';
+          $login_error = 'The password you\'ve entered is incorrect.';
         }
+        } // Close the main login else block
       } else {
         // Try faculty table (faculty login) first
         $facultyStmt = $db->prepare('SELECT * FROM faculty WHERE email = ?');
         $facultyStmt->execute([$username]);
         $faculty = $facultyStmt->fetch(PDO::FETCH_ASSOC);
         if ($faculty) {
-          if (password_verify($password, $faculty['password'])) {
+          // Check if this is a restricted login type
+          if ($login_type === 'student') {
+            $login_error = 'This login is for students only. Please use the faculty login for faculty accounts.';
+          } else {
+            // Faculty login or main login - proceed
+            if (password_verify($password, $faculty['password'])) {
             // Faculty login success - direct access to patient dashboard
             session_start();
             // Clear any student session state to avoid showing student name/info
@@ -80,11 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['faculty_name'] = $faculty['full_name'];
             $_SESSION['role'] = 'faculty';
             $_SESSION['department'] = $faculty['department'];
-            header('Location: patient/profile.php');
+            header('Location: faculty/profile.php');
             exit;
           } else {
-            $login_error = 'incorrect_password';
+            $login_error = 'The password you\'ve entered is incorrect.';
           }
+          } // Close the faculty validation else block
         } else {
           // Try imported_patients table (student login) only if faculty not found
           $importDb = new PDO('mysql:host=localhost;dbname=clinic_management_system;charset=utf8', 'root', '');
@@ -93,19 +108,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $stmt2->execute([$username]);
           $student = $stmt2->fetch(PDO::FETCH_ASSOC);
           if ($student) {
-            if (password_verify($password, $student['password'])) {
+            // Check if this is a restricted login type
+            if ($login_type === 'faculty') {
+              $login_error = 'This login is for faculty only. Please use the student login for student accounts.';
+            } else {
+              // Student login or main login - proceed
+              if (password_verify($password, $student['password'])) {
               // Step 1: Store pending login and show DOB form
               session_start();
               $_SESSION['pending_patient_id'] = $student['id'];
               $_SESSION['pending_student_id'] = $student['student_id'];
               $_SESSION['pending_patient_name'] = $student['name'];
-              header('Location: index.php?dobstep=1');
+              $_SESSION['role'] = 'student';
+              $_SESSION['student_name'] = $student['name'];
+               header('Location: index.php?dobstep=1');
               exit;
             } else {
-              $login_error = 'incorrect_password';
+              $login_error = 'The password you\'ve entered is incorrect.';
             }
+            } // Close the student validation else block
           } else {
-            $login_error = 'invalid_username';
+            $login_error = 'The account you\'ve entered does not exist.';
           }
         }
       }
@@ -206,6 +229,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       display: none; /* Safari and Chrome */
     }
 
+    /* Modern gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 8px rgba(252, 211, 77, 0.5));
+    }
+
+    /* Modern gradient buttons */
+    .gradient-button {
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      transition: all 0.3s ease;
+    }
+
+    .gradient-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Modern card shadows */
+    .modern-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .modern-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Icon containers */
+    .icon-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .icon-container.blue { background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); }
+    .icon-container.green { background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%); }
+    .icon-container.purple { background: linear-gradient(135deg, #E9D5FF 0%, #DDD6FE 100%); }
+    .icon-container.orange { background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%); }
+
+    /* Dark gradient section */
+    .dark-gradient {
+      background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+    }
+
+    /* Form styling */
+    .modern-input {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: white;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+    }
+
+    .modern-input:focus {
+      outline: none;
+      border-color: #4F46E5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .modern-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Benefits grid */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+
+    .benefit-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+
+    .benefit-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .benefit-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    /* Metrics cards */
+    .metric-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .metric-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
     .stat-counter {
       display: inline-block;
     }
@@ -282,8 +428,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </a>
         <nav class="hidden md:flex space-x-8">
           <a href="index.php" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors">Home</a>
-          <a href="index_user.php" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors">Student Login</a>
-          <a href="faculty_login.php" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors">Faculty Login</a>
+          <a href="#studentLoginModal" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors" onclick="document.getElementById('studentLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Student Login</a>
+          <a href="#facultyLoginModal" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors" onclick="document.getElementById('facultyLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Faculty Login</a>
           <a href="#features" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors">Features</a>
           <a href="#contact" class="nav-link text-gray-800 font-medium hover:text-primary transition-colors">Contact</a>
         </nav>
@@ -301,113 +447,280 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="heroBg" class="absolute inset-0">
       <div id="heroBg1" class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"></div>
       <div id="heroBg2" class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out opacity-0"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-white/20"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20"></div>
     </div>
     <div class="container mx-auto relative z-10">
-      <div class="max-w-xl">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">Clinic Management System</h1>
-        <p class="text-lg text-gray-700 mb-8">A modern platform for managing appointments, patient records, inventory, and more for clinics and schools. Empowering <span class="text-primary font-semibold">Admins</span>, <span class="text-primary font-semibold">Doctors/Nurses</span>, and <span class="text-primary font-semibold">Students</span>.</p>
-        <div class="flex flex-col sm:flex-row gap-4 mb-8">
-          <a href="#features" class="bg-primary text-white px-6 py-3 !rounded-button font-medium hover:bg-opacity-90 transition-colors text-center whitespace-nowrap">Explore Features</a>
-          <a href="#roles" class="bg-white text-primary border border-primary px-6 py-3 !rounded-button font-medium hover:bg-gray-50 transition-colors text-center whitespace-nowrap">See User Roles</a>
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+          Clinic Management <span class="gradient-text">System</span>
+        </h1>
+        <p class="text-xl text-white mb-10 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+          A modern platform for managing appointments, patient records, inventory, and more for clinics and schools. 
+          Empowering <span class="text-yellow-300 font-semibold">Admins</span>, <span class="text-yellow-300 font-semibold">Doctors/Nurses</span>, and <span class="text-yellow-300 font-semibold">Students</span>.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center mb-10">
+          <a href="#features" class="gradient-button text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 text-center whitespace-nowrap flex items-center justify-center">
+            Explore Features
+            <i class="ri-arrow-right-line ml-2"></i>
+          </a>
+          <a href="#roles" class="bg-white text-primary border-2 border-primary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all duration-300 text-center whitespace-nowrap flex items-center justify-center">
+            See User Roles
+          </a>
         </div>
-        <p class="text-sm text-gray-600">St. Cecilia's College Clinic Management System</p>
+        <p class="text-white/90 text-lg drop-shadow-md">St. Cecilia's College Clinic Management System</p>
       </div>
     </div>
   </section>
   <!-- Roles Section -->
-  <section id="roles" class="py-12 bg-white">
+  <section id="roles" class="py-20 bg-white">
     <div class="container mx-auto px-6">
-      <div class="text-center mb-10">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Who Can Use This System?</h2>
-        <p class="text-gray-600 max-w-2xl mx-auto">Designed for all clinic stakeholders. Each role has a dedicated dashboard and features.</p>
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-gray-900 mb-6">Who Can Use This System?</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Designed for all clinic stakeholders. Each role has a dedicated dashboard and features.</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-gray-50 rounded-lg shadow p-6 flex flex-col items-center">
-          <i class="ri-shield-user-line text-4xl text-primary mb-2"></i>
-          <h3 class="text-xl font-semibold text-primary mb-1">Admin</h3>
-          <p class="text-gray-600 text-center mb-2">Manage users, view reports, oversee all clinic operations.</p>
-          <a href="#loginModal" class="text-primary font-medium hover:underline" onclick="document.getElementById('loginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Go to Admin Dashboard</a>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="modern-card p-8 text-center flex flex-col h-full">
+          <div class="icon-container blue mx-auto">
+            <i class="ri-shield-user-line text-2xl text-blue-600"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Admin</h3>
+          <p class="text-gray-600 mb-6 leading-relaxed flex-grow">Manage users, view reports, oversee all clinic operations.</p>
+          <ul class="text-left text-gray-600 mb-8 space-y-2">
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>User Management</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>System Reports</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Data Analytics</li>
+          </ul>
+          <a href="#loginModal" class="gradient-button text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center mt-auto" onclick="document.getElementById('loginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">
+            Go to Admin Dashboard
+            <i class="ri-arrow-right-line ml-1"></i>
+          </a>
         </div>
-        <div class="bg-gray-50 rounded-lg shadow p-6 flex flex-col items-center">
-          <i class="ri-stethoscope-line text-4xl text-primary mb-2"></i>
-          <h3 class="text-xl font-semibold text-primary mb-1">Doctor/Nurse</h3>
-          <p class="text-gray-600 text-center mb-2">View appointments, manage patient records, issue prescriptions, and monitor inventory.</p>
-          <a href="#loginModal" class="text-primary font-medium hover:underline" onclick="document.getElementById('loginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Go to Staff Dashboard</a>
+        <div class="modern-card p-8 text-center flex flex-col h-full">
+          <div class="icon-container green mx-auto">
+            <i class="ri-stethoscope-line text-2xl text-green-600"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Doctor/Nurse</h3>
+          <p class="text-gray-600 mb-6 leading-relaxed flex-grow">View appointments, manage patient records, issue prescriptions, and monitor inventory.</p>
+          <ul class="text-left text-gray-600 mb-8 space-y-2">
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Patient Records</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Prescriptions</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Appointments</li>
+          </ul>
+          <a href="#loginModal" class="gradient-button text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center mt-auto" onclick="document.getElementById('loginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">
+            Go to Staff Dashboard
+            <i class="ri-arrow-right-line ml-1"></i>
+          </a>
         </div>
-        <div class="bg-gray-50 rounded-lg shadow p-6 flex flex-col items-center">
-          <i class="ri-user-3-line text-4xl text-primary mb-2"></i>
-          <h3 class="text-xl font-semibold text-primary mb-1">Student</h3>
-          <p class="text-gray-600 text-center mb-2">Book appointments, view your medical history, and receive notifications.</p>
-          <a href="#loginModal" class="text-primary font-medium hover:underline" onclick="document.getElementById('loginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Go to Student Portal</a>
+        <div class="modern-card p-8 text-center flex flex-col h-full">
+          <div class="icon-container purple mx-auto">
+            <i class="ri-user-3-line text-2xl text-purple-600"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Student</h3>
+          <p class="text-gray-600 mb-6 leading-relaxed flex-grow">Book appointments, view your medical history, and receive notifications.</p>
+          <ul class="text-left text-gray-600 mb-8 space-y-2">
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Book Appointments</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Medical History</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Notifications</li>
+          </ul>
+          <a href="#studentLoginModal" class="gradient-button text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center mt-auto" onclick="document.getElementById('studentLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">
+            Go to Student Portal
+            <i class="ri-arrow-right-line ml-1"></i>
+          </a>
+        </div>
+        <div class="modern-card p-8 text-center flex flex-col h-full">
+          <div class="icon-container orange mx-auto">
+            <i class="ri-graduation-cap-line text-2xl text-orange-600"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Faculty</h3>
+          <p class="text-gray-600 mb-6 leading-relaxed flex-grow">Access patient profiles, view medical records, and manage student health information.</p>
+          <ul class="text-left text-gray-600 mb-8 space-y-2">
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Patient Profiles</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Medical Records</li>
+            <li class="flex items-center"><i class="ri-check-line text-green-500 mr-2"></i>Health Monitoring</li>
+          </ul>
+          <a href="#facultyLoginModal" class="gradient-button text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center mt-auto" onclick="document.getElementById('facultyLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">
+            Go to Faculty Portal
+            <i class="ri-arrow-right-line ml-1"></i>
+          </a>
         </div>
       </div>
     </div>
   </section>
   <!-- Features Section -->
-  <section id="features" class="py-16 bg-gray-50">
+  <section id="features" class="py-20 bg-gray-50">
     <div class="container mx-auto px-6">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Comprehensive Clinic Management Features</h2>
-        <p class="text-gray-600 max-w-2xl mx-auto">Our platform offers everything you need to run your clinic efficiently and provide exceptional care.</p>
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-gray-900 mb-6">Comprehensive Clinic Management Features</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our platform offers everything you need to run your clinic efficiently and provide exceptional care.</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-            <i class="ri-calendar-check-line ri-xl"></i>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="modern-card p-8">
+          <div class="icon-container blue mb-6">
+            <i class="ri-calendar-check-line text-2xl text-blue-600"></i>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Online Appointments</h3>
-          <p class="text-gray-600">Book and manage appointments 24/7 with real-time availability.</p>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Online Appointments</h3>
+          <p class="text-gray-600 leading-relaxed">Book and manage appointments 24/7 with real-time availability and automated reminders.</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-            <i class="ri-folder-user-line ri-xl"></i>
+        <div class="modern-card p-8">
+          <div class="icon-container green mb-6">
+            <i class="ri-folder-user-line text-2xl text-green-600"></i>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Patient Records</h3>
-          <p class="text-gray-600">Secure electronic health records with complete patient history and visit notes.</p>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Patient Records</h3>
+          <p class="text-gray-600 leading-relaxed">Secure electronic health records with complete patient history and visit notes.</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-            <i class="ri-medicine-bottle-line ri-xl"></i>
+        <div class="modern-card p-8">
+          <div class="icon-container purple mb-6">
+            <i class="ri-medicine-bottle-line text-2xl text-purple-600"></i>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Prescription Management</h3>
-          <p class="text-gray-600">Digital prescription system with medication tracking and refill management.</p>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Prescription Management</h3>
+          <p class="text-gray-600 leading-relaxed">Digital prescription system with medication tracking and refill management.</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-            <i class="ri-bar-chart-2-line ri-xl"></i>
+        <div class="modern-card p-8">
+          <div class="icon-container orange mb-6">
+            <i class="ri-bar-chart-2-line text-2xl text-orange-600"></i>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">Reports & Analytics</h3>
-          <p class="text-gray-600">Generate reports and gain insights to improve clinic performance.</p>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Reports & Analytics</h3>
+          <p class="text-gray-600 leading-relaxed">Generate reports and gain insights to improve clinic performance.</p>
         </div>
       </div>
     </div>
   </section>
-  <!-- Contact Section -->
-  <section id="contact" class="py-16 bg-white">
+  
+  <!-- Additional Platform Benefits Section -->
+  <section class="py-20 bg-white">
     <div class="container mx-auto px-6">
-      <div class="max-w-2xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Contact Us</h2>
-        <p class="text-gray-600 mb-8">Have questions or need support? Reach out to our team.</p>
-        <div class="flex flex-col md:flex-row justify-center gap-8">
-          <div class="flex flex-col items-center">
-            <i class="ri-map-pin-line text-primary text-2xl mb-2"></i>
-            <span class="text-gray-700">St. Cecilia's College Cebu, Minglanilla</span>
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold text-gray-900 mb-6">Additional Platform Benefits</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Experience the advantages of our modern clinic management system.</p>
+      </div>
+      
+      <!-- Benefits Grid -->
+      <div class="benefits-grid mb-16">
+        <div class="benefit-card">
+          <div class="benefit-icon blue">
+            <i class="ri-time-line text-xl text-blue-600"></i>
           </div>
-          <div class="flex flex-col items-center">
-            <i class="ri-phone-line text-primary text-2xl mb-2"></i>
-            <a href="tel:09166764802" class="text-gray-700 hover:text-primary">09166764802</a>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">24/7 Availability</h3>
+          <p class="text-gray-600 text-sm">Access your clinic data anytime, anywhere with our cloud-based system.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon green">
+            <i class="ri-shield-check-line text-xl text-green-600"></i>
           </div>
-          <div class="flex flex-col items-center">
-            <i class="ri-mail-line text-primary text-2xl mb-2"></i>
-            <a href="mailto:cms@medicare.com" class="text-gray-700 hover:text-primary">cms@medicare.com</a>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">HIPAA Compliant</h3>
+          <p class="text-gray-600 text-sm">Full compliance with healthcare data protection standards.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon purple">
+            <i class="ri-smartphone-line text-xl text-purple-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Mobile Responsive</h3>
+          <p class="text-gray-600 text-sm">Optimized for all devices with seamless mobile experience.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon orange">
+            <i class="ri-customer-service-2-line text-xl text-orange-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">24/7 Support</h3>
+          <p class="text-gray-600 text-sm">Round-the-clock technical support and assistance.</p>
+        </div>
+      </div>
+      
+      <!-- Metrics Section -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="metric-card">
+          <div class="metric-number">99.9%</div>
+          <p class="text-gray-600 font-medium">Uptime Guarantee</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-number">1000+</div>
+          <p class="text-gray-600 font-medium">Happy Users</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-number">24/7</div>
+          <p class="text-gray-600 font-medium">Support Available</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="py-20 dark-gradient">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl font-bold text-white mb-6">Contact Us</h2>
+          <p class="text-xl text-gray-300">Have questions or need support? Reach out to our team.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <!-- Contact Information -->
+          <div class="space-y-8">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                <i class="ri-map-pin-line text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold mb-1">Location</h3>
+                <p class="text-gray-300">St. Cecilia's College Cebu, Minglanilla</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                <i class="ri-phone-line text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold mb-1">Phone</h3>
+                <a href="tel:09166764802" class="text-gray-300 hover:text-white transition-colors">09166764802</a>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                <i class="ri-mail-line text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold mb-1">Email</h3>
+                <a href="mailto:cms@medicare.com" class="text-gray-300 hover:text-white transition-colors">cms@medicare.com</a>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                <i class="ri-time-line text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-white font-semibold mb-1">Hours</h3>
+                <p class="text-gray-300">Monday - Friday: 8:00 AM - 5:00 PM</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Contact Form -->
+          <div>
+            <form class="space-y-6">
+              <div>
+                <label class="block text-white font-medium mb-2">Name</label>
+                <input type="text" class="modern-input w-full" placeholder="Your name">
+              </div>
+              <div>
+                <label class="block text-white font-medium mb-2">Email</label>
+                <input type="email" class="modern-input w-full" placeholder="your@email.com">
+              </div>
+              <div>
+                <label class="block text-white font-medium mb-2">Message</label>
+                <textarea rows="4" class="modern-input w-full resize-none" placeholder="Your message"></textarea>
+              </div>
+              <button type="submit" class="gradient-button text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 w-full flex items-center justify-center">
+                Send Message
+                <i class="ri-arrow-right-line ml-2"></i>
+              </button>
+            </form>
           </div>
         </div>
       </div>
     </div>
   </section>
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white pt-10 pb-6 mt-12">
+  <footer class="bg-gray-900 text-white pt-10 pb-6">
     <div class="container mx-auto px-6">
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="mb-4 md:mb-0">
@@ -436,8 +749,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 <nav class="p-6 space-y-6">
 <a href="#" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Home</a>
-<a href="index_user.php" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Student Login</a>
-<a href="faculty_login.php" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Faculty Login</a>
+<a href="#studentLoginModal" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2" onclick="document.getElementById('studentLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Student Login</a>
+<a href="#facultyLoginModal" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2" onclick="document.getElementById('facultyLoginModal').classList.remove('hidden');document.body.style.overflow='hidden';return false;">Faculty Login</a>
 <a href="#" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Services</a>
 <a href="#" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Appointments</a>
 <a href="#" class="block text-gray-800 font-medium hover:text-primary transition-colors py-2">Patient Portal</a>
@@ -474,9 +787,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" id="username" name="username" required
               class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="Enter your username" value="<?php echo $username_val; ?>">
-            <?php if ($login_error === 'invalid_username'): ?>
+            <?php if ($login_error === 'The account you\'ve entered does not exist.'): ?>
               <div class="absolute left-0 right-0 mt-1 text-xs text-red-600 animate-fade-in">
-                The account you’ve entered does not exist.
+                The account you've entered does not exist.
               </div>
             <?php endif; ?>
           </div>
@@ -487,7 +800,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" id="password" name="password" required
               class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="Enter your password" value="<?php echo $password_val; ?>">
-            <?php if ($login_error === 'incorrect_password'): ?>
+            <?php if ($login_error === 'The password you\'ve entered is incorrect.'): ?>
               <div class="absolute left-0 right-0 mt-1 text-xs text-red-600 animate-fade-in">
                 The password you've entered is incorrect.
               </div>
@@ -540,6 +853,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </form>
     </div>
   </div>
+  
+  <!-- Student Login Modal -->
+  <div id="studentLoginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b">
+        <h2 class="text-2xl font-semibold text-gray-900">Student Login</h2>
+        <button id="closeStudentLoginModal"
+          class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700">
+          <i class="ri-close-line ri-lg"></i>
+        </button>
+      </div>
+       <form class="p-6 space-y-6" method="POST" action="index.php" id="studentLoginForm">
+         <input type="hidden" name="login_type" value="student">
+        <div>
+          <label for="student_username" class="block text-sm font-medium text-gray-700 mb-2">Student ID</label>
+          <div class="relative">
+            <input type="text" id="student_username" name="username" required
+              class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              placeholder="Enter your student ID">
+          </div>
+          <?php if (!empty($login_error) && isset($_POST['login_type']) && $_POST['login_type'] === 'student' && $login_error === 'The account you\'ve entered does not exist.'): ?>
+            <div class="text-red-600 text-sm mt-1">
+              <?php echo htmlspecialchars($login_error); ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div>
+          <label for="student_password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <div class="relative">
+            <input type="password" id="student_password" name="password" required
+              class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              placeholder="Enter your password">
+          </div>
+          <?php if (!empty($login_error) && isset($_POST['login_type']) && $_POST['login_type'] === 'student' && $login_error !== 'The account you\'ve entered does not exist.'): ?>
+            <div class="text-red-600 text-sm mt-1">
+              <?php echo htmlspecialchars($login_error); ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <label class="flex items-center text-sm text-gray-600">
+              <input type="checkbox" id="showStudentPassword" class="mr-2 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0">
+              Show password
+            </label>
+          </div>
+          <a href="#" class="text-sm text-primary hover:text-opacity-80">Forgot password?</a>
+        </div>
+        <button type="submit"
+          class="w-full bg-primary text-white py-2 !rounded-button font-medium hover:bg-opacity-90 transition-colors">Login as Student</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Faculty Login Modal -->
+  <div id="facultyLoginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b">
+        <h2 class="text-2xl font-semibold text-gray-900">Faculty Login</h2>
+        <button id="closeFacultyLoginModal"
+          class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700">
+          <i class="ri-close-line ri-lg"></i>
+        </button>
+      </div>
+       <form class="p-6 space-y-6" method="POST" action="index.php" id="facultyLoginForm">
+         <input type="hidden" name="login_type" value="faculty">
+        <div>
+          <label for="faculty_username" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <div class="relative">
+            <input type="email" id="faculty_username" name="username" required
+              class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              placeholder="Enter your email address">
+          </div>
+          <?php if (!empty($login_error) && isset($_POST['login_type']) && $_POST['login_type'] === 'faculty' && $login_error === 'The account you\'ve entered does not exist.'): ?>
+            <div class="text-red-600 text-sm mt-1">
+              <?php echo htmlspecialchars($login_error); ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div>
+          <label for="faculty_password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <div class="relative">
+            <input type="password" id="faculty_password" name="password" required
+              class="block w-full pl-3 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              placeholder="Enter your password">
+          </div>
+          <?php if (!empty($login_error) && isset($_POST['login_type']) && $_POST['login_type'] === 'faculty' && $login_error !== 'The account you\'ve entered does not exist.'): ?>
+            <div class="text-red-600 text-sm mt-1">
+              <?php echo htmlspecialchars($login_error); ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <label class="flex items-center text-sm text-gray-600">
+              <input type="checkbox" id="showFacultyPassword" class="mr-2 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0">
+              Show password
+            </label>
+          </div>
+          <a href="#" class="text-sm text-primary hover:text-opacity-80">Forgot password?</a>
+        </div>
+        <button type="submit"
+          class="w-full bg-primary text-white py-2 !rounded-button font-medium hover:bg-opacity-90 transition-colors">Login as Faculty</button>
+      </form>
+    </div>
+  </div>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const loginBtn = document.getElementById('loginBtn');
@@ -634,11 +1054,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           }
         });
       }
-      // If there is a login error (but not DOB error), show the modal automatically
-      <?php if (!empty($login_error) && !isset($_GET['dobstep'])): ?>
-        loginModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      <?php endif; ?>
 
       // Check for hash to auto-open login modal
       if (window.location.hash === '#login') {
@@ -647,6 +1062,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Remove the hash from URL after opening modal
         history.replaceState(null, null, ' ');
       }
+
+      // Student Login Modal handlers
+      const studentLoginModal = document.getElementById('studentLoginModal');
+      const closeStudentLoginModal = document.getElementById('closeStudentLoginModal');
+      const showStudentPassword = document.getElementById('showStudentPassword');
+      const studentPasswordInput = document.getElementById('student_password');
+
+      if (closeStudentLoginModal && studentLoginModal) {
+        closeStudentLoginModal.addEventListener('click', function () {
+          studentLoginModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        });
+        studentLoginModal.addEventListener('click', function (e) {
+          if (e.target === studentLoginModal) {
+            studentLoginModal.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+      }
+
+      if (showStudentPassword && studentPasswordInput) {
+        showStudentPassword.addEventListener('change', function() {
+          const type = this.checked ? 'text' : 'password';
+          studentPasswordInput.setAttribute('type', type);
+        });
+      }
+
+      // Faculty Login Modal handlers
+      const facultyLoginModal = document.getElementById('facultyLoginModal');
+      const closeFacultyLoginModal = document.getElementById('closeFacultyLoginModal');
+      const showFacultyPassword = document.getElementById('showFacultyPassword');
+      const facultyPasswordInput = document.getElementById('faculty_password');
+
+      if (closeFacultyLoginModal && facultyLoginModal) {
+        closeFacultyLoginModal.addEventListener('click', function () {
+          facultyLoginModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        });
+        facultyLoginModal.addEventListener('click', function (e) {
+          if (e.target === facultyLoginModal) {
+            facultyLoginModal.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+      }
+
+      if (showFacultyPassword && facultyPasswordInput) {
+        showFacultyPassword.addEventListener('change', function() {
+          const type = this.checked ? 'text' : 'password';
+          facultyPasswordInput.setAttribute('type', type);
+        });
+      }
+
+      // If there is a login error (but not DOB error), show the appropriate modal automatically
+      <?php if (!empty($login_error) && !isset($_GET['dobstep'])): ?>
+        <?php if (isset($_POST['login_type']) && $_POST['login_type'] === 'student'): ?>
+          studentLoginModal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        <?php elseif (isset($_POST['login_type']) && $_POST['login_type'] === 'faculty'): ?>
+          facultyLoginModal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        <?php else: ?>
+          loginModal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        <?php endif; ?>
+      <?php endif; ?>
     });
   </script>
   <!-- Render DOB form if needed -->

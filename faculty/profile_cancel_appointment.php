@@ -1,7 +1,5 @@
 <?php
 // profile_cancel_appointment.php
-// Suppress any output before JSON
-ob_start();
 header('Content-Type: application/json');
 require_once '../includes/db_connect.php';
 
@@ -13,7 +11,6 @@ $time = $data['time'] ?? null;
 $reason = $data['reason'] ?? null;
 
 if (!$student_id || !$date || !$time || !$reason) {
-    ob_clean(); // Clear any output buffer
     echo json_encode(['success' => false, 'error' => 'Missing data.']);
     exit;
 }
@@ -23,9 +20,7 @@ try {
     $stmt = $db->prepare('UPDATE appointments SET status = "cancelled" WHERE student_id = ? AND date = ? AND time = ? AND reason = ? AND status = "pending" LIMIT 1');
     $stmt->execute([$student_id, $date, $time, $reason]);
     $success = $stmt->rowCount() > 0;
-    ob_clean(); // Clear any output buffer
     echo json_encode(['success' => $success]);
 } catch (PDOException $e) {
-    ob_clean(); // Clear any output buffer
     echo json_encode(['success' => false, 'error' => 'DB error.']);
 }

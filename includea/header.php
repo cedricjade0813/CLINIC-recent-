@@ -352,7 +352,7 @@ if (!$user_display_name) {
                     </div>
                     <div class="hidden md:block">
                         <p class="text-sm font-medium text-gray-800">
-                            <?php echo htmlspecialchars($user_display_name ?: 'User', ENT_QUOTES, 'UTF-8'); ?>
+                            Hello, <?php echo htmlspecialchars($user_display_name ?: 'User', ENT_QUOTES, 'UTF-8'); ?>
                         </p>
                         <p class="text-xs text-gray-500">
                             <?php echo isset($current_role) ? htmlspecialchars(ucfirst($current_role), ENT_QUOTES, 'UTF-8') : (isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role'], ENT_QUOTES, 'UTF-8') : ''); ?>
@@ -419,15 +419,7 @@ if (!$user_display_name) {
                         </li>
                     </ul>
                 </nav>
-                <div class="p-4 border-t border-gray-200 hidden md:block">
-                    <a href="../index.php"
-                        class="flex items-center text-sm font-medium text-gray-600 hover:text-primary">
-                        <div class="w-8 h-8 flex items-center justify-center mr-3">
-                            <i class="ri-admin-line ri-lg"></i>
-                        </div>
-                        <span>Hello Admin</span>
-                    </a>
-                </div>
+                
 
             </aside>
 
@@ -925,6 +917,11 @@ if (!$user_display_name) {
                             
                             // Show success message
                             showNotification('Profile updated successfully!', 'success');
+                            
+                            // Refresh the page after a short delay
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
                         } else {
                             showNotification('Error: ' + data.message, 'error');
                         }

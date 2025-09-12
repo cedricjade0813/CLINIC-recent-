@@ -12,21 +12,14 @@ try {
     $student_id = $_SESSION['student_row_id'] ?? null;
 
     // Handle appointment booking
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['appointment_date'], $_POST['appointment_time'], $_POST['reason'], $_POST['email'], $_POST['parent_email'])) {
-        $date = $_POST['appointment_date'];
-        $time = $_POST['appointment_time'];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['date'], $_POST['time'], $_POST['reason'], $_POST['email'], $_POST['parent_email'])) {
+        $date = $_POST['date'];
+        $time = $_POST['time'];
         $reason = $_POST['reason'];
         $email = $_POST['email'];
         $parent_email = $_POST['parent_email'];
-        
-        // Debug: Log the received data
-        error_log("Appointment booking attempt - Date: $date, Time: $time, Student ID: $student_id");
-        
-        // Check if student_id is valid
-        if (!$student_id) {
-            $error_message = "You must be logged in to book an appointment.";
-        } else {
-            // Check if appointment already exists for this date and time
+
+        // Check if appointment already exists for this date and time
         $check_stmt = $db->prepare('SELECT id FROM appointments WHERE date = ? AND time = ? AND status != "declined"');
         $check_stmt->execute([$date, $time]);
 
@@ -60,7 +53,6 @@ try {
             }
 
             $success_message = "Appointment booked successfully! Please wait for staff approval.";
-        }
         }
     }
 
@@ -182,13 +174,13 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
             <form id="bookApptForm" method="POST" autocomplete="off">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input type="date" id="modalDate" name="appointment_date" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" required />
+
                 </div>
-                <div class="mb-4">
+                <div class="py-1 px-4" data-hs-datatable-paging="">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                    <select id="modalTime" name="appointment_time" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" required>
-                        <option value="" selected disabled>Select time</option>
-                    </select>
+
+                    <option value="" selected disabled>Select time</option>
+
                 </div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
@@ -1116,14 +1108,7 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
                                 reason
                             })
                         })
-                        .then(res => {
-                            // Check if response is JSON
-                            const contentType = res.headers.get('content-type');
-                            if (!contentType || !contentType.includes('application/json')) {
-                                throw new Error('Response is not JSON');
-                            }
-                            return res.json();
-                        })
+                        .then(res => res.json())
                         .then(data => {
                             if (data.success) {
                                 // Update status cell in the table
@@ -1136,12 +1121,8 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
                                 btn.classList.add('opacity-50', 'cursor-not-allowed');
                                 showSuccessModal('Appointment cancelled successfully!', 'Success');
                             } else {
-                                showErrorModal(data.error || 'Failed to cancel appointment.', 'Error');
+                                showErrorModal('Failed to cancel appointment.', 'Error');
                             }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showErrorModal('An error occurred while cancelling the appointment. Please try again.', 'Error');
                         });
                 });
             });
@@ -1351,15 +1332,13 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
                     const modalDate = document.getElementById('modalDate');
                     const modalTime = document.getElementById('modalTime');
 
-                    if (modalDate && modalTime) {
-                        // Format date as yyyy-mm-dd
-                        const mm = (month + 1).toString().padStart(2, '0');
-                        const dd = d.toString().padStart(2, '0');
-                        modalDate.value = `${year}-${mm}-${dd}`;
+                    // Format date as yyyy-mm-dd
+                    const mm = (month + 1).toString().padStart(2, '0');
+                    const dd = d.toString().padStart(2, '0');
+                    modalDate.value = `${year}-${mm}-${dd}`;
 
-                        // Set time automatically based on doctor schedule
-                        modalTime.innerHTML = '';
-                    }
+                    // Set time automatically based on doctor schedule
+                    modalTime.innerHTML = '';
 
                     // Get doctor schedule for this date
                     const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
@@ -1411,7 +1390,7 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
                     console.log('Available slots for', dateStr, ':', availableSlots);
 
                     // Auto-display the first available slot
-                    if (availableSlots.length > 0 && modalTime) {
+                    if (availableSlots.length > 0) {
                         const firstSlot = availableSlots[0];
 
                         // Create and add the option
@@ -1422,7 +1401,7 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
                         modalTime.appendChild(option);
 
                         console.log('Auto-displayed time slot:', firstSlot.schedule_time);
-                    } else if (modalTime) {
+                    } else {
                         // If no slots available, show message
                         const option = document.createElement('option');
                         option.value = '';
@@ -1457,19 +1436,13 @@ $declined_display = array_slice($declined_appts, $declined_offset, $declined_rec
         const modalDate = document.getElementById('modalDate');
 
         // Reset form fields
-        if (form) {
-            form.reset();
-        }
+        form.reset();
 
         // Clear time dropdown
-        if (modalTime) {
-            modalTime.innerHTML = '';
-        }
+        modalTime.innerHTML = '';
 
         // Clear date
-        if (modalDate) {
-            modalDate.value = '';
-        }
+        modalDate.value = '';
     }
 
     // Modal open/close logic

@@ -261,90 +261,80 @@ try {
     <!-- System Overview Section -->
     <div class="mb-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">System Overview</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style="grid-template-rows: auto auto;">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <!-- Total Patients Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Total Patients</p>
-                        <p class="text-3xl font-bold text-blue-600"><?= number_format($total_patients) ?></p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="ri-arrow-up-line text-green-500 mr-1"></i>
-                            Updated just now
-                        </p>
-                    </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-6 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-medium text-gray-600">Total Patients</p>
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <i class="ri-user-2-line text-2xl text-blue-600"></i>
                     </div>
                 </div>
+                <p class="text-3xl font-bold text-blue-600 mb-2"><?= number_format($total_patients) ?></p>
+                <p class="text-xs text-gray-500 flex items-center">
+                    <i class="ri-arrow-up-line text-green-500 mr-1"></i>
+                    Updated just now
+                </p>
             </div>
 
             <!-- Today's Visits Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Today's Visits</p>
-                        <p class="text-3xl font-bold text-green-600"><?= number_format($todays_visits) ?></p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="ri-arrow-up-line text-green-500 mr-1"></i>
-                            Updated just now
-                        </p>
-                    </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-6 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-medium text-gray-600">Today's Visits</p>
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                         <i class="ri-calendar-check-line text-2xl text-green-600"></i>
                     </div>
                 </div>
+                <p class="text-3xl font-bold text-green-600 mb-2"><?= number_format($todays_visits) ?></p>
+                <p class="text-xs text-gray-500 flex items-center">
+                    <i class="ri-arrow-up-line text-green-500 mr-1"></i>
+                    Updated just now
+                </p>
             </div>
 
             <!-- Upcoming Appointments Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Upcoming Appointments</p>
-                        <p class="text-3xl font-bold text-orange-600"><?= number_format($upcoming_appointments) ?></p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="ri-arrow-up-line text-green-500 mr-1"></i>
-                            Updated just now
-                        </p>
-                    </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-6 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-medium text-gray-600">Upcoming Appointments</p>
                     <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                         <i class="ri-calendar-line text-2xl text-orange-600"></i>
                     </div>
                 </div>
+                <p class="text-3xl font-bold text-orange-600 mb-2"><?= number_format($upcoming_appointments) ?></p>
+                <p class="text-xs text-gray-500 flex items-center">
+                    <i class="ri-arrow-up-line text-green-500 mr-1"></i>
+                    Updated just now
+                </p>
             </div>
 
             <!-- Low Stock Items Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Low Stock Items</p>
-                        <p class="text-3xl font-bold text-red-600"><?= number_format($low_stock_items) ?></p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="ri-arrow-up-line text-green-500 mr-1"></i>
-                            Updated just now
-                        </p>
-                    </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-6 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-medium text-gray-600">Low Stock Items</p>
                     <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                         <i class="ri-box-line text-2xl text-red-600"></i>
                     </div>
                 </div>
+                <p class="text-3xl font-bold text-red-600 mb-2"><?= number_format($low_stock_items) ?></p>
+                <p class="text-xs text-gray-500 flex items-center">
+                    <i class="ri-arrow-up-line text-green-500 mr-1"></i>
+                    Updated just now
+                </p>
             </div>
 
             <!-- Today's Prescriptions Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6" style="grid-column: 2 / 3; grid-row: 2 / 3;">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Today's Prescriptions</p>
-                        <p class="text-3xl font-bold text-purple-600"><?= number_format($todays_prescriptions) ?></p>
-                        <p class="text-xs text-gray-500 mt-1 flex items-center">
-                            <i class="ri-arrow-up-line text-green-500 mr-1"></i>
-                            Updated just now
-                        </p>
-                    </div>
+            <div class="bg-white rounded-lg border border-gray-200 p-6 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-medium text-gray-600">Today's Prescriptions</p>
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                         <i class="ri-links-line text-2xl text-purple-600"></i>
                     </div>
                 </div>
+                <p class="text-3xl font-bold text-purple-600 mb-2"><?= number_format($todays_prescriptions) ?></p>
+                <p class="text-xs text-gray-500 flex items-center">
+                    <i class="ri-arrow-up-line text-green-500 mr-1"></i>
+                    Updated just now
+                </p>
             </div>
         </div>
     </div>

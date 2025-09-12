@@ -11,6 +11,12 @@ if (
 ) {
     include '../includes/db_connect.php';
     
+    // Initialize MySQLi connection for compatibility
+    $conn = new mysqli('localhost', 'root', '', 'clinic_management_system');
+    if ($conn->connect_errno) {
+        die('Database connection failed: ' . $conn->connect_error);
+    }
+    
     // Create doctor_schedules table if not exists
     $db->exec("CREATE TABLE IF NOT EXISTS doctor_schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -969,7 +975,14 @@ function addScheduleToTable(schedule) {
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ action: 'delete_schedule', id: scheduleId })
                 })
-                .then(res => res.json())
+                .then(res => {
+                    // Check if response is JSON
+                    const contentType = res.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Response is not JSON');
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         // Remove the row from table

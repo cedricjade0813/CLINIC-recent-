@@ -420,7 +420,7 @@ if ($user_display_name) {
                     </div>
                     <div class="hidden md:block">
                         <p class="text-sm font-medium text-gray-800">
-                            <?php echo $user_display_name ? $user_display_name : 'User'; ?>
+                            Hello, <?php echo $user_display_name ? $user_display_name : 'User'; ?>
                         </p>
                         <p class="text-xs text-gray-500">
                             <?php echo isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role']) : ''; ?>
@@ -532,15 +532,7 @@ if ($user_display_name) {
 
                     </ul>
                 </nav>
-                <div class="p-4 border-t border-gray-200 hidden md:block">
-                    <a href="../index.php"
-                        class="flex items-center text-sm font-medium text-gray-600 hover:text-primary">
-                        <div class="w-8 h-8 flex items-center justify-center mr-3">
-                            <i class="ri-user-heart-line ri-lg"></i>
-                        </div>
-                        <span>Hello Nurse</span>
-                    </a>
-                </div>
+                
 
             </aside>
 
