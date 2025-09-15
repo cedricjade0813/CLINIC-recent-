@@ -11,25 +11,23 @@ include '../includea/header.php';
 
 .summary-card {
     transition: all 0.3s ease;
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
     backdrop-filter: blur(10px);
 }
 
-.summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    border-color: rgba(59, 130, 246, 0.3);
-}
 
 .upload-section {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
     backdrop-filter: blur(10px);
 }
 
 .table-container {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
     backdrop-filter: blur(10px);
 }
 
@@ -37,10 +35,6 @@ include '../includea/header.php';
     transition: all 0.2s ease;
 }
 
-.table-row:hover {
-    background-color: rgba(59, 130, 246, 0.02);
-    transform: scale(1.001);
-}
 
 .status-badge {
     position: relative;
@@ -317,13 +311,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
 <main class="flex-1 overflow-y-auto main-content p-6 ml-16 md:ml-64 mt-[56px]">
         <!-- Application Header -->
         <div class="mb-3">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Patient Import System</h1>
-            
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Patient Records</h1>  
         </div>
 
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+            <div class="bg-white rounded-lg p-6 summary-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 mb-1">Total Patients</p>
@@ -335,7 +328,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+            <div class="bg-white rounded-lg p-6 summary-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 mb-1">Active Records</p>
@@ -347,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+            <div class="bg-white rounded-lg p-6 summary-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 mb-1">Duplicates</p>
@@ -359,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+            <div class="bg-white rounded-lg p-6 summary-card">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 mb-1">Import Status</p>
@@ -373,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
         </div>
 
         <!-- Search & Filter Section -->
-        <div class="bg-white rounded-lg shadow-soft p-6 mb-8 upload-section">
+        <div class="bg-white rounded-lg p-6 mb-8 upload-section">
             <h3 class="text-lg font-semibold text-gray-800 mb-2">Import & Filter</h3>
             <p class="text-gray-600 text-sm mb-6">Upload CSV files or use filters to manage patient data</p>
             
@@ -423,7 +416,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csvFile'])) {
             <?php endif; ?>
         </div>
         <!-- Patient Directory Table -->
-        <div class="bg-white rounded-lg shadow-soft table-container">
+        <div class="bg-white rounded-lg table-container">
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex justify-between items-end">
                     <div>

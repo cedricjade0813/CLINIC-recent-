@@ -80,19 +80,16 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     .summary-card {
         transition: all 0.3s ease;
-        border: 1px solid rgba(226, 232, 240, 0.8);
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
         backdrop-filter: blur(10px);
     }
 
-    .summary-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        border-color: rgba(59, 130, 246, 0.3);
-    }
 
     .table-container {
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid rgba(226, 232, 240, 0.8);
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
         backdrop-filter: blur(10px);
     }
 
@@ -100,10 +97,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         transition: all 0.2s ease;
     }
 
-    .table-row:hover {
-        background-color: rgba(59, 130, 246, 0.02);
-        transform: scale(1.001);
-    }
 
     .shadow-soft {
         box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
@@ -168,7 +161,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+        <div class="bg-white rounded-lg p-6 summary-card">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">Total Users</p>
@@ -180,7 +173,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+        <div class="bg-white rounded-lg p-6 summary-card">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">Active Users</p>
@@ -195,7 +188,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-soft p-6 summary-card">
+        <div class="bg-white rounded-lg p-6 summary-card">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 mb-1">Search Results</p>
@@ -208,7 +201,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
     <!-- Users Table -->
-    <div class="bg-white rounded-lg shadow-soft table-container">
+    <div class="bg-white rounded-lg table-container">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-800">Users</h3>
             <div class="flex items-center space-x-3">

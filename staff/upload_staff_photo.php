@@ -72,18 +72,26 @@ try {
     $current_image = $stmt->fetchColumn();
 
     // Delete old profile image if exists
-    if ($current_image && file_exists($current_image)) {
-        unlink($current_image);
+    if ($current_image) {
+        // Handle both old format (with ../) and new format (without ../)
+        $old_image_path = $current_image;
+        if (!str_starts_with($current_image, '../')) {
+            $old_image_path = '../' . $current_image;
+        }
+        if (file_exists($old_image_path)) {
+            unlink($old_image_path);
+        }
     }
 
-    // Update database with new image path
+    // Update database with new image path (store relative path without ../)
+    $db_image_path = 'uploads/profiles/' . $filename;
     $stmt = $db->prepare("UPDATE {$table} SET profile_image = ? WHERE " . ($table === 'users' ? 'id' : 'faculty_id') . " = ?");
-    $stmt->execute([$file_path, $user_id]);
+    $stmt->execute([$db_image_path, $user_id]);
 
     echo json_encode([
         'success' => true,
         'message' => 'Profile photo updated successfully',
-        'image_path' => $file_path
+        'image_path' => $db_image_path
     ]);
 
 } catch (Exception $e) {

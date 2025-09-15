@@ -17,7 +17,9 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && $_SESSION['role']
         $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($user_data) {
-            $user_display_name = htmlspecialchars($user_data['username']);
+            $full_name = $user_data['name'];
+            $first_name = explode(' ', $full_name)[0];
+            $user_display_name = htmlspecialchars($first_name);
             $current_role = 'admin';
         }
     } catch (PDOException $e) {
@@ -384,7 +386,7 @@ if (!$user_display_name) {
                                 <div class="w-8 h-8 flex items-center justify-center mr-3 md:mr-4">
                                     <i class="ri-import-line ri-lg"></i> <!-- If available in your version -->
                                 </div>
-                                <span class="hidden md:inline">Import CSV</span>
+                                <span class="hidden md:inline">Upload Patient</span>
                             </a>
                         </li>
                         <li>
@@ -469,11 +471,9 @@ if (!$user_display_name) {
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between p-6 border-b border-gray-200">
                         <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                                <?php echo htmlspecialchars($initials ?? 'U', ENT_QUOTES, 'UTF-8'); ?>
-                            </div>
+                            
                             <div>
-                                <h2 class="text-2xl font-bold text-gray-800">User Profile</h2>
+                                <h2 class="text-2xl font-bold text-gray-800">Profile</h2>
                                 <p class="text-gray-600">Manage your profile and contact information</p>
                             </div>
                         </div>

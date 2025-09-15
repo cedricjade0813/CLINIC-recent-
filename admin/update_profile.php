@@ -99,6 +99,6 @@ try {
     echo json_encode(['success' => false, 'message' => 'Database error occurred']);
 } catch (Exception $e) {
     error_log("General error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An error occurred while updating profile']);
+    echo json_encode(['success' => false, 'message' => 'An error occurred while updating profile: ' . $e->getMessage()]);
 }
 ?>

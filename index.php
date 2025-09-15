@@ -435,7 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </nav>
       </div>
       <div class="flex items-center space-x-4">
-        <a href="#loginModal" id="loginBtn" class="text-gray-700 hover:text-primary font-medium whitespace-nowrap">Login</a>
+        <a href="#loginModal" id="loginBtn" class="text-white font-medium whitespace-nowrap px-4 py-2 rounded-lg transition-colors duration-200" style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);" onmouseover="this.style.background='linear-gradient(135deg, #4338CA 0%, #6D28D9 100%)'" onmouseout="this.style.background='linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)'">Login</a>
         <button class="md:hidden w-10 h-10 flex items-center justify-center text-gray-700">
           <i class="ri-menu-line ri-lg"></i>
         </button>

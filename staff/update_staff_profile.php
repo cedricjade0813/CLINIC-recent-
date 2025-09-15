@@ -86,6 +86,6 @@ try {
 
 } catch (Exception $e) {
     error_log('Staff profile update error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An error occurred while updating profile']);
+    echo json_encode(['success' => false, 'message' => 'An error occurred while updating profile: ' . $e->getMessage()]);
 }
 ?>
